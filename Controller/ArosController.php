@@ -226,38 +226,45 @@ class ArosController extends AclAppController
 	    $actions = $this->AclReflector->get_all_actions();
 	    
 	    $methods = array();
-		foreach($actions as $k => $full_action)
-    	{
-	    	$arr = CakeText::tokenize($full_action, '/');
-	    	
-			if (count($arr) == 2)
-			{
-				$plugin_name     = null;
-				$controller_name = $arr[0];
-				$action          = $arr[1];
-			}
-			elseif(count($arr) == 3)
-			{
-				$plugin_name     = $arr[0];
-				$controller_name = $arr[1];
-				$action          = $arr[2];
-			}
-			
-			if($controller_name == 'App')
-			{
-			    unset($actions[$k]);
-			}
-			else
-			{
-        		if(isset($plugin_name))
+            foreach($actions as $k => $full_action) {
+            
+                if (Configure::version() < '2.7') 
                 {
-                	$methods['plugin'][$plugin_name][$controller_name][] = array('name' => $action);
+                    $arr = String::tokenize($full_action, '/');
+                } 
+                else 
+                {
+                    $arr = CakeText::tokenize($full_action, '/');
+                }
+                
+                if (count($arr) == 2)
+                {
+                        $plugin_name     = null;
+                        $controller_name = $arr[0];
+                        $action          = $arr[1];
+                }
+                elseif(count($arr) == 3)
+                {
+                        $plugin_name     = $arr[0];
+                        $controller_name = $arr[1];
+                        $action          = $arr[2];
+                }
+
+                if($controller_name == 'App')
+                {
+                    unset($actions[$k]);
+                }
+            else
+            {
+                if(isset($plugin_name))
+                {
+                    $methods['plugin'][$plugin_name][$controller_name][] = array('name' => $action);
                 }
                 else
                 {
             	    $methods['app'][$controller_name][] = array('name' => $action);
                 }
-			}
+            }
     	}
     	
 	    $this->set('roles', $roles);
@@ -281,56 +288,63 @@ class ArosController extends AclAppController
 	    $methods     = array();
 	    
 	    foreach($actions as $full_action)
-    	{
-	    	$arr = CakeText::tokenize($full_action, '/');
-	    	
-			if (count($arr) == 2)
-			{
-				$plugin_name     = null;
-				$controller_name = $arr[0];
-				$action          = $arr[1];
-			}
-			elseif(count($arr) == 3)
-			{
-				$plugin_name     = $arr[0];
-				$controller_name = $arr[1];
-				$action          = $arr[2];
-			}
+            {
+                if (Configure::version() < '2.7') 
+                {
+                    $arr = String::tokenize($full_action, '/');
+                } 
+                else 
+                {
+                    $arr = CakeText::tokenize($full_action, '/');
+                }
+                
+                if (count($arr) == 2)
+                {
+                    $plugin_name     = null;
+                    $controller_name = $arr[0];
+                    $action          = $arr[1];
+                }
+                elseif(count($arr) == 3)
+                {
+                    $plugin_name     = $arr[0];
+                    $controller_name = $arr[1];
+                    $action          = $arr[2];
+                }
     		
-			if($controller_name != 'App')
-			{
+                if($controller_name != 'App')
+                {
     		    foreach($roles as $role)
-    	    	{
-    	    	    $aro_node = $this->Acl->Aro->node($role);
-    	            if(!empty($aro_node))
-    	            {
-    	                $aco_node = $this->Acl->Aco->node('controllers/' . $full_action);
-    	        	    if(!empty($aco_node))
-    	        	    {
-    	        	    	$authorized = $this->Acl->check($role, 'controllers/' . $full_action);
-    	        	    	
-    	        	    	$permissions[$role[Configure :: read('acl.aro.role.model')][$this->_get_role_primary_key_name()]] = $authorized ? 1 : 0 ;
-    					}
-    	            }
-    	    		else
-            	    {
-            	        /*
-            	         * No check could be done as the ARO is missing
-            	         */
-            	        $permissions[$role[Configure :: read('acl.aro.role.model')][$this->_get_role_primary_key_name()]] = -1;
-            	    }
-        		}
+                    {
+                        $aro_node = $this->Acl->Aro->node($role);
+                        if(!empty($aro_node))
+                        {
+                            $aco_node = $this->Acl->Aco->node('controllers/' . $full_action);
+                                if(!empty($aco_node))
+                                {
+                                    $authorized = $this->Acl->check($role, 'controllers/' . $full_action);
+
+                                    $permissions[$role[Configure :: read('acl.aro.role.model')][$this->_get_role_primary_key_name()]] = $authorized ? 1 : 0 ;
+                                }
+                            }
+                        else
+                        {
+                            /*
+                                                    * No check could be done as the ARO is missing
+                                                    */
+                            $permissions[$role[Configure :: read('acl.aro.role.model')][$this->_get_role_primary_key_name()]] = -1;
+                        }
+                    }
         		
-        		if(isset($plugin_name))
-                {
+                    if(isset($plugin_name))
+                    {
                 	$methods['plugin'][$plugin_name][$controller_name][] = array('name' => $action, 'permissions' => $permissions);
+                    }
+                    else
+                    {
+                        $methods['app'][$controller_name][] = array('name' => $action, 'permissions' => $permissions);
+                    }
                 }
-                else
-                {
-            	    $methods['app'][$controller_name][] = array('name' => $action, 'permissions' => $permissions);
-                }
-			}
-    	}
+            }   
  		
 	    $this->set('roles', $roles);
 	    $this->set('actions', $methods);
@@ -398,59 +412,66 @@ class ArosController extends AclAppController
             {
             	$actions = $this->AclReflector->get_all_actions();
         		
-	            foreach($actions as $full_action)
-		    	{
-			    	$arr = CakeText::tokenize($full_action, '/');
-			    	
-					if (count($arr) == 2)
-					{
-						$plugin_name     = null;
-						$controller_name = $arr[0];
-						$action          = $arr[1];
-					}
-					elseif(count($arr) == 3)
-					{
-						$plugin_name     = $arr[0];
-						$controller_name = $arr[1];
-						$action          = $arr[2];
-					}
+                foreach($actions as $full_action)
+                {
+                    if (Configure::version() < '2.7') 
+                    {
+                        $arr = String::tokenize($full_action, '/');
+                    } 
+                    else 
+                    {
+                        $arr = CakeText::tokenize($full_action, '/');
+                    }
 
-					if($controller_name != 'App')
-					{
-    					if(!isset($this->params['named']['ajax']))
-    					{
-        		    		$aco_node = $this->Acl->Aco->node('controllers/' . $full_action);
-        	        	    if(!empty($aco_node))
-        	        	    {
-        	        	    	$authorized = $this->Acl->check($user, 'controllers/' . $full_action);
-    
-        	        	    	$permissions[$user[$user_model_name][$this->_get_user_primary_key_name()]] = $authorized ? 1 : 0 ;
-        					}
-    					}
-    					
-    			    	if(isset($plugin_name))
-    		            {
-    		            	$methods['plugin'][$plugin_name][$controller_name][] = array('name' => $action, 'permissions' => $permissions);
-    		            }
-    		            else
-    		            {
-    		        	    $methods['app'][$controller_name][] = array('name' => $action, 'permissions' => $permissions);
-    		            }
-					}
-		    	}
-		    	
-		    	/*
-		    	 * Check if the user has specific permissions
-		    	 */
-		    	$count = $this->Aro->Permission->find('count', array('conditions' => array('Aro.id' => $user_aro[0]['Aro']['id'])));
-		    	if($count != 0)
-		    	{
-		    	    $this->set('user_has_specific_permissions', true);
-		    	}
-		    	else
-		    	{
-		    	    $this->set('user_has_specific_permissions', false);
-		    	}
+                    if (count($arr) == 2)
+                    {
+                        $plugin_name     = null;
+                        $controller_name = $arr[0];
+                        $action          = $arr[1];
+                    }
+                    elseif(count($arr) == 3)
+                    {
+                        $plugin_name     = $arr[0];
+                        $controller_name = $arr[1];
+                        $action          = $arr[2];
+                    }
+
+                    if($controller_name != 'App')
+                    {
+                        if(!isset($this->params['named']['ajax']))
+                        {
+                            $aco_node = $this->Acl->Aco->node('controllers/' . $full_action);
+                            if(!empty($aco_node))
+                            {
+                                $authorized = $this->Acl->check($user, 'controllers/' . $full_action);
+
+                                $permissions[$user[$user_model_name][$this->_get_user_primary_key_name()]] = $authorized ? 1 : 0 ;
+                            }
+                        }
+
+                        if(isset($plugin_name))
+                        {
+                            $methods['plugin'][$plugin_name][$controller_name][] = array('name' => $action, 'permissions' => $permissions);
+                        }
+                        else
+                        {
+                            $methods['app'][$controller_name][] = array('name' => $action, 'permissions' => $permissions);
+                        }
+                    }
+                }
+
+                /*
+                                * Check if the user has specific permissions
+                                */
+                $count = $this->Aro->Permission->find('count', array('conditions' => array('Aro.id' => $user_aro[0]['Aro']['id'])));
+                if($count != 0)
+                {
+                    $this->set('user_has_specific_permissions', true);
+                }
+                else
+                {
+                    $this->set('user_has_specific_permissions', false);
+                }
             }
             
             $this->set('user', $user);

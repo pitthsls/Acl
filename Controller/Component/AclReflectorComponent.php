@@ -14,7 +14,12 @@ class AclReflectorComponent extends Component
 	
 	public function getPluginName($ctrlName = null)
 	{
-		$arr = String::tokenize($ctrlName, '/');
+		if (Configure::version() < '2.7') {
+			$arr = String::tokenize($ctrlName, '/');
+		} else {
+			$arr = CakeText::tokenize($ctrlName, '/');
+		}
+
 		if (count($arr) == 2) {
 			return $arr[0];
 		} else {
@@ -23,7 +28,12 @@ class AclReflectorComponent extends Component
 	}
 	public function getPluginControllerName($ctrlName = null)
 	{
-		$arr = String::tokenize($ctrlName, '/');
+		if (Configure::version() < '2.7') {
+			$arr = String::tokenize($ctrlName, '/');
+		} else {
+			$arr = CakeText::tokenize($ctrlName, '/');
+		}
+
 		if (count($arr) == 2) {
 			return $arr[1];
 		} else {
